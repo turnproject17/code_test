@@ -1,0 +1,133 @@
+Answers:
+
+1. What's the difference between `include` and `extend`?
+	include: Included module provides the instance methods for the class.
+
+	extend: Extended module provides the class methods for the class.
+	
+	for example: 
+		module IncludedModule
+			def first_method
+				puts "hi this method is called"
+			end
+		end
+
+
+		class Address < ApplicationRecord
+			include IncludedModule
+		end
+
+		Address.first.first_method : "hi this method is called"
+
+		class Address < ApplicationRecord
+			extend IncludedModule
+		end	
+
+		Address.first_method :"hi this method is called"
+	 
+
+2. What's the difference between `clone` and `dup`?
+	clone:  Is use to create a new instance having all values allready set including ID, after save it overwrites the original record in database.
+
+	dup: while dup provides the complete object having all value allready set excluding ID, after save it creates new data record in database without overwriting original one.
+
+3. What's the difference between `Proc` and `lambda`?
+	Proc: Procs are the instances of the class Proc. Procs don't care about the number of arguments passed during the call.
+	for example: 
+		proc = Proc.new {|a| puts "a is output."} 
+		proc.call('hello') 										# hello is output
+		proc.call('hello', 'I', 'am', 'here') # hello is output
+		proc.call 				 										# prints nil
+
+	Lambda: Lambda requires the exact number of arguments during the call.
+	for example:
+		l = lambda { |a| puts a }      # lambda requires 1 argument
+		l.call(2)                      # prints out 2
+		lam.call                       # ArgumentError: wrong number of arguments (0 for 1)
+		lam.call('hi', 'I', 'am', 'here')        # ArgumentError: wrong number of arguments (4 for 1)
+
+4. What's a good example for using `yield` in ruby?
+	Basically yield keyword uses to place a block of code inside the method.
+	
+	example in views:
+		In the of layout file we want to place our js,
+			<body>
+				<%yield :js%>
+			</body>
+		In other view pages we can place our javascript code like:
+			<%-content_for :js do %>
+				<script>
+					...
+				</script>
+			<%-end%>
+	
+	example in ruby code:
+		def calc(a, b) 
+			yield(a, b)
+		end
+
+		we can call this function:
+		for multiply:
+			puts calc(a, b){|a, b| a*b}
+
+		same method for divide:
+			puts calc(a, b){|a, b| a/b}
+
+5. You need to integrate with several REST APIs that often change over time. What design pattern would you use so that it limits  the effect of these changes on your code base?	
+
+	To integrate third party APIs in our code, I would like to create a namespace or library folder, In this folder we will create several module files for different versions of APIs and also will create some mixins or module which will be having unique code for each version(don't need to write same code multiple times), These mixins will be incude and extend inside the version files. 
+	
+		1. During the use of these classes will standardize a CONSTANT with the current version class name. In the case of switching the versions we will just need to change the calue of this CONSTANT.
+
+		2. In each version will defind URI endpoint for specific version of APIs and also create the methods for each CRUD operations.  
+
+
+		for example:
+			class UtilityConnect 
+				include HTTParty
+
+				base_uri  "https://utilityapi.com/api/v2"
+
+				def initialize
+			    @access_token = { query: {access_token: ENV['UTILITYAPI_KEY']}}
+			  end
+
+				def template options={}
+					@access_token[:query].merge!(options)
+					self.class.get('/templates', @access_token)
+				end
+
+				def forms_all options={}
+					@access_token[:query].merge!(options)
+					self.class.get('/forms', @access_token)
+				end
+			end	
+	
+
+6. If you were to give a junior dev 3 programming books, what would they be?
+	a. "codecademy" for ruby and rails.
+	b. "jQuery in Action" for jQuery.
+	c. "codecademy" for html and css.
+
+7. You've been tasked with adding a new screen that shows an index page of Recent Articles, briefly describe the steps you would take when adding this new feature
+	a. Create routes: Need to a collection route in articles resources.
+											resources :articles do 
+												collection{get: recent}
+											end 
+
+	b. Create class method: Create a class method or scope method which will return all recent article as per requirement.
+											def self.recent
+												self.where(created_at: [Time.now..Time.now-1.day])
+											end
+											or 
+											scope :recents,-> {where(created_at: [Time.now..Time.now-1.day])}
+
+
+	c. Create action: Need to create an action method in articles controller which will be use to call the business logic from model.
+											def recent
+												@articles = Article.recents
+											end
+	d. Create view template: Need to create a view page in articles folder inside the views to place the template.
+
+
+
